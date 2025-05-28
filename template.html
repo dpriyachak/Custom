@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .review-area {
+      margin-top: 30px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Key-Value Pair Review</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pair in task.input.kv_pairs %}
+        <tr>
+          <td>{{ pair.key }}</td>
+          <td>{{ pair.value }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="review-area">
+      <p>Please confirm if the extracted key-value pairs are correct:</p>
+
+      <crowd-form>
+        <crowd-radio-group name="kv_review_decision" required>
+          <crowd-radio-button value="approve">Approve</crowd-radio-button>
+          <crowd-radio-button value="reject">Reject</crowd-radio-button>
+        </crowd-radio-group>
+
+        <br/>
+        <label for="review_comment">Optional comment:</label><br/>
+        <crowd-text-area name="review_comment" rows="4" placeholder="Add any notes or corrections here..."></crowd-text-area>
+      </crowd-form>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Dashboard - Enhanced</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 40px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 25%;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            padding: 25px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .filter-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .date-input {
+            padding: 8px 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .tag:hover {
+            background: #dee2e6;
+        }
+
+        .tag.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .refresh-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .clear-filters-btn {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            color: #6c757d;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .clear-filters-btn:hover {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+
+        /* Table Container Styles */
+        .table-container {
+            width: 75%;
+            padding: 30px;
+            overflow: auto;
+            background: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-count {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .export-btn {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        thead {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+            color: #495057;
+            transition: background-color 0.2s ease;
+        }
+
+        tr:hover td {
+            background-color: #f8f9fa;
+        }
+
+        .job-id {
+            font-weight: 600;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+        }
+
+        .folder-path {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #6c757d;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .folder-path:hover {
+            overflow: visible;
+            white-space: normal;
+            word-break: break-all;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.running {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.pending {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .datetime {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .reviewer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reviewer-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .reviewer-name {
+            font-weight: 500;
+        }
+
+        .job-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .job-tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .no-results-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+                max-height: 300px;
+            }
+
+            .table-container {
+                width: 100%;
+            }
+
+            .stats {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .sidebar {
+                padding: 20px;
+            }
+
+            .table-container {
+                padding: 20px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 12px 8px;
+            }
+
+            .folder-path {
+                max-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Job Dashboard</h1>
+            <p>Monitor and manage document processing jobs with advanced filtering</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Left Sidebar with Filters -->
+            <div class="sidebar">
+                <h3>🔍 Search Filters</h3>
+
+                <!-- Job ID Filter -->
+                <div class="filter-section">
+                    <label class="filter-label" for="jobIdFilter">Job ID</label>
+                    <input type="text" id="jobIdFilter" class="filter-input" placeholder="Enter Job ID...">
+                </div>
+
+                <!-- User Filter -->
+                <div class="filter-section">
+                    <label class="filter-label" for="userFilter">User</label>
+                    <select id="userFilter" class="filter-select">
+                        <option value="">All Users</option>
+                        <option value="system">System</option>
+                        <option value="admin">Admin</option>
+                        <option value="analyst">Analyst</option>
+                        <option value="manager">Manager</option>
+                    </select>
+                </div>
+
+                <!-- Reviewer Team Filter -->
+                <div class="filter-section">
+                    <label class="filter-label" for="reviewerFilter">Reviewer</label>
+                    <select id="reviewerFilter" class="filter-select">
+                        <option value="">All Reviewers</option>
+                        <option value="John Smith">John Smith</option>
+                        <option value="Maria Johnson">Maria Johnson</option>
+                        <option value="Robert Wilson">Robert Wilson</option>
+                        <option value="Lisa Brown">Lisa Brown</option>
+                        <option value="David Miller">David Miller</option>
+                        <option value="Sarah Kim">Sarah Kim</option>
+                        <option value="Alex Thompson">Alex Thompson</option>
+                        <option value="Emily Garcia">Emily Garcia</option>
+                        <option value="Chris Lee">Chris Lee</option>
+                        <option value="Nancy Parker">Nancy Parker</option>
+                    </select>
+                </div>
+
+                <!-- Tags Filter -->
+                <div class="filter-section">
+                    <label class="filter-label">Tags</label>
+                    <div class="tags-container">
+                        <span class="tag" data-tag="urgent">Urgent</span>
+                        <span class="tag" data-tag="legal">Legal</span>
+                        <span class="tag" data-tag="financial">Financial</span>
+                        <span class="tag" data-tag="medical">Medical</span>
+                        <span class="tag" data-tag="research">Research</span>
+                        <span class="tag" data-tag="contracts">Contracts</span>
+                        <span class="tag" data-tag="invoices">Invoices</span>
+                        <span class="tag" data-tag="reports">Reports</span>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="filter-section">
+                    <label class="filter-label" for="statusFilter">Status</label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">All Statuses</option>
+                        <option value="completed">Completed</option>
+                        <option value="running">Running</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+
+                <!-- Time Range Filter -->
+                <div class="filter-section">
+                    <label class="filter-label">Time Range</label>
+                    <div class="date-range">
+                        <input type="date" id="startDate" class="date-input" title="Start Date">
+                        <input type="date" id="endDate" class="date-input" title="End Date">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <button class="refresh-btn" onclick="applyFilters()">🔄 Apply Filters</button>
+                <button class="clear-filters-btn" onclick="clearAllFilters()">Clear All</button>
+            </div>
+
+            <!-- Right Side Table Container -->
+            <div class="table-container">
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalJobs">24</div>
+                        <div class="stat-label">Total Jobs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completedJobs">18</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="runningJobs">3</div>
+                        <div class="stat-label">Running</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="pendingJobs">2</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="failedJobs">1</div>
+                        <div class="stat-label">Failed</div>
+                    </div>
+                </div>
+
+                <div class="table-header">
+                    <div class="results-count" id="resultsCount">Showing 10 of 24 jobs</div>
+                    <button class="export-btn" onclick="exportResults()">📊 Export</button>
+                </div>
+
+                <table id="jobTable">
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Input Folder</th>
+                            <th>Output Folder</th>
+                            <th>Start Time</th>
+                            <th>Stop Time</th>
+                            <th>Status</th>
+                            <th>Tags</th>
+                            <th>Reviewer</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobTableBody">
+                        <tr data-status="completed" data-reviewer="John Smith" data-user="system" data-tags="legal,contracts" data-start="2024-01-15">
+                            <td class="job-id">JOB-2024-001</td>
+                            <td class="folder-path">/data/input/batch_001/documents</td>
+                            <td class="folder-path">/data/output/batch_001/processed</td>
+                            <td class="datetime">2024-01-15 09:30:00</td>
+                            <td class="datetime">2024-01-15 11:45:00</td>
+                            <td><span class="status completed">Completed</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">legal</span>
+                                <span class="job-tag">contracts</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">JS</div>
+                                <span class="reviewer-name">John Smith</span>
+                            </td>
+                        </tr>
+                        <tr data-status="running" data-reviewer="Maria Johnson" data-user="analyst" data-tags="legal,urgent" data-start="2024-01-15">
+                            <td class="job-id">JOB-2024-002</td>
+                            <td class="folder-path">/data/input/batch_002/legal_docs</td>
+                            <td class="folder-path">/data/output/batch_002/analyzed</td>
+                            <td class="datetime">2024-01-15 14:20:00</td>
+                            <td class="datetime">-</td>
+                            <td><span class="status running">Running</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">legal</span>
+                                <span class="job-tag">urgent</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">MJ</div>
+                                <span class="reviewer-name">Maria Johnson</span>
+                            </td>
+                        </tr>
+                        <tr data-status="completed" data-reviewer="Robert Wilson" data-user="manager" data-tags="financial,reports" data-start="2024-01-14">
+                            <td class="job-id">JOB-2024-003</td>
+                            <td class="folder-path">/data/input/batch_003/financial_reports</td>
+                            <td class="folder-path">/data/output/batch_003/extracted</td>
+                            <td class="datetime">2024-01-14 16:00:00</td>
+                            <td class="datetime">2024-01-14 18:30:00</td>
+                            <td><span class="status completed">Completed</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">financial</span>
+                                <span class="job-tag">reports</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">RW</div>
+                                <span class="reviewer-name">Robert Wilson</span>
+                            </td>
+                        </tr>
+                        <tr data-status="failed" data-reviewer="Lisa Brown" data-user="system" data-tags="contracts,urgent" data-start="2024-01-15">
+                            <td class="job-id">JOB-2024-004</td>
+                            <td class="folder-path">/data/input/batch_004/contracts</td>
+                            <td class="folder-path">/data/output/batch_004/failed</td>
+                            <td class="datetime">2024-01-15 08:15:00</td>
+                            <td class="datetime">2024-01-15 08:45:00</td>
+                            <td><span class="status failed">Failed</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">contracts</span>
+                                <span class="job-tag">urgent</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">LB</div>
+                                <span class="reviewer-name">Lisa Brown</span>
+                            </td>
+                        </tr>
+                        <tr data-status="pending" data-reviewer="David Miller" data-user="analyst" data-tags="invoices,financial" data-start="">
+                            <td class="job-id">JOB-2024-005</td>
+                            <td class="folder-path">/data/input/batch_005/invoices</td>
+                            <td class="folder-path">/data/output/batch_005/pending</td>
+                            <td class="datetime">-</td>
+                            <td class="datetime">-</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">invoices</span>
+                                <span class="job-tag">financial</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">DM</div>
+                                <span class="reviewer-name">David Miller</span>
+                            </td>
+                        </tr>
+                        <tr data-status="running" data-reviewer="Sarah Kim" data-user="admin" data-tags="medical,research" data-start="2024-01-15">
+                            <td class="job-id">JOB-2024-006</td>
+                            <td class="folder-path">/data/input/batch_006/medical_records</td>
+                            <td class="folder-path">/data/output/batch_006/processing</td>
+                            <td class="datetime">2024-01-15 13:45:00</td>
+                            <td class="datetime">-</td>
+                            <td><span class="status running">Running</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">medical</span>
+                                <span class="job-tag">research</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">SK</div>
+                                <span class="reviewer-name">Sarah Kim</span>
+                            </td>
+                        </tr>
+                        <tr data-status="completed" data-reviewer="Alex Thompson" data-user="system" data-tags="research,reports" data-start="2024-01-13">
+                            <td class="job-id">JOB-2024-007</td>
+                            <td class="folder-path">/data/input/batch_007/research_papers</td>
+                            <td class="folder-path">/data/output/batch_007/summarized</td>
+                            <td class="datetime">2024-01-13 10:00:00</td>
+                            <td class="datetime">2024-01-13 15:20:00</td>
+                            <td><span class="status completed">Completed</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">research</span>
+                                <span class="job-tag">reports</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">AT</div>
+                                <span class="reviewer-name">Alex Thompson</span>
+                            </td>
+                        </tr>
+                        <tr data-status="pending" data-reviewer="Emily Garcia" data-user="manager" data-tags="research" data-start="">
+                            <td class="job-id">JOB-2024-008</td>
+                            <td class="folder-path">/data/input/batch_008/customer_feedback</td>
+                            <td class="folder-path">/data/output/batch_008/analyzed</td>
+                            <td class="datetime">-</td>
+                            <td class="datetime">-</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">research</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">EG</div>
+                                <span class="reviewer-name">Emily Garcia</span>
+                            </td>
+                        </tr>
+                        <tr data-status="running" data-reviewer="Chris Lee" data-user="analyst" data-tags="research,reports" data-start="2024-01-15">
+                            <td class="job-id">JOB-2024-009</td>
+                            <td class="folder-path">/data/input/batch_009/survey_responses</td>
+                            <td class="folder-path">/data/output/batch_009/insights</td>
+                            <td class="datetime">2024-01-15 15:30:00</td>
+                            <td class="datetime">-</td>
+                            <td><span class="status running">Running</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">research</span>
+                                <span class="job-tag">reports</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">CL</div>
+                                <span class="reviewer-name">Chris Lee</span>
+                            </td>
+                        </tr>
+                        <tr data-status="completed" data-reviewer="Nancy Parker" data-user="admin" data-tags="reports" data-start="2024-01-12">
+                            <td class="job-id">JOB-2024-010</td>
+                            <td class="folder-path">/data/input/batch_010/product_manuals</td>
+                            <td class="folder-path">/data/output/batch_010/indexed</td>
+                            <td class="datetime">2024-01-12 09:15:00</td>
+                            <td class="datetime">2024-01-12 12:40:00</td>
+                            <td><span class="status completed">Completed</span></td>
+                            <td class="job-tags">
+                                <span class="job-tag">reports</span>
+                            </td>
+                            <td class="reviewer">
+                                <div class="reviewer-avatar">NP</div>
+                                <span class="reviewer-name">Nancy Parker</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div id="noResults" class="no-results" style="display: none;">
+                    <div class="no-results-icon">🔍</div>
+                    <h3>No jobs found</h3>
+                    <p>Try adjusting your search filters</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allJobs = [];
+        let filteredJobs = [];
+        let selectedTags = [];
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeJobs();
+            setupEventListeners();
+            updateStats();
+        });
+
+        function initializeJobs() {
+            const tableBody = document.getElementById('jobTableBody');
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            allJobs = Array.from(rows).map(row => ({
+                element: row,
+                jobId: row.querySelector('.job-id').textContent,
+                status: row.getAttribute('data-status'),
+                reviewer: row.getAttribute('data-reviewer'),
+                user: row.getAttribute('data-user'),
+                tags: row.getAttribute('data-tags').split(','),
+                startDate: row.getAttribute('data-start')
+            }));
+            
+            filteredJobs = [...allJobs];
+        }
+
+        function setupEventListeners() {
+            // Tag selection
+            document.querySelectorAll('.tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const tagValue = this.getAttribute('data-tag');
+                    
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        selectedTags = selectedTags.filter(t => t !== tagValue);
+                    } else {
+                        this.classList.add('selected');
+                        selectedTags.push(tagValue);
+                    }
+                    
+                    // Apply filters immediately when tag is clicked
+                    applyFilters();
+                });
+            });
+
+            // Real-time filtering on input changes
+            document.getElementById('jobIdFilter').addEventListener('input', applyFilters);
+            document.getElementById('userFilter').addEventListener('change', applyFilters);
+            document.getElementById('reviewerFilter').addEventListener('change', applyFilters);
+            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+            document.getElementById('startDate').addEventListener('change', applyFilters);
+            document.getElementById('endDate').addEventListener('change', applyFilters);
+        }
+
+        function applyFilters() {
+            const jobIdFilter = document.getElementById('jobIdFilter').value.toLowerCase();
+            const userFilter = document.getElementById('userFilter').value;
+            const reviewerFilter = document.getElementById('reviewerFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            filteredJobs = allJobs.filter(job => {
+                // Job ID filter
+                if (jobIdFilter && !job.jobId.toLowerCase().includes(jobIdFilter)) {
+                    return false;
+                }
+
+                // User filter
+                if (userFilter && job.user !== userFilter) {
+                    return false;
+                }
+
+                // Reviewer filter
+                if (reviewerFilter && job.reviewer !== reviewerFilter) {
+                    return false;
+                }
+
+                // Status filter
+                if (statusFilter && job.status !== statusFilter) {
+                    return false;
+                }
+
+                // Tags filter
+                if (selectedTags.length > 0) {
+                    const hasSelectedTag = selectedTags.some(tag => job.tags.includes(tag));
+                    if (!hasSelectedTag) {
+                        return false;
+                    }
+                }
+
+                // Date range filter
+                if (startDate && job.startDate && job.startDate < startDate) {
+                    return false;
+                }
+                if (endDate && job.startDate && job.startDate > endDate) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            updateTable();
+            updateStats();
+            updateResultsCount();
+        }
+
+        function updateTable() {
+            const tableBody = document.getElementById('jobTableBody');
+            const noResults = document.getElementById('noResults');
+            
+            // Hide all rows first
+            allJobs.forEach(job => {
+                job.element.style.display = 'none';
+            });
+
+            // Show filtered rows
+            if (filteredJobs.length > 0) {
+                filteredJobs.forEach(job => {
+                    job.element.style.display = '';
+                });
+                tableBody.parentElement.style.display = '';
+                noResults.style.display = 'none';
+            } else {
+                tableBody.parentElement.style.display = 'none';
+                noResults.style.display = 'block';
+            }
+        }
+
+        function updateStats() {
+            const stats = {
+                total: filteredJobs.length,
+                completed: filteredJobs.filter(job => job.status === 'completed').length,
+                running: filteredJobs.filter(job => job.status === 'running').length,
+                pending: filteredJobs.filter(job => job.status === 'pending').length,
+                failed: filteredJobs.filter(job => job.status === 'failed').length
+            };
+
+            document.getElementById('totalJobs').textContent = stats.total;
+            document.getElementById('completedJobs').textContent = stats.completed;
+            document.getElementById('runningJobs').textContent = stats.running;
+            document.getElementById('pendingJobs').textContent = stats.pending;
+            document.getElementById('failedJobs').textContent = stats.failed;
+        }
+
+        function updateResultsCount() {
+            const resultsCount = document.getElementById('resultsCount');
+            resultsCount.textContent = `Showing ${filteredJobs.length} of ${allJobs.length} jobs`;
+        }
+
+        function clearAllFilters() {
+            // Clear all input fields
+            document.getElementById('jobIdFilter').value = '';
+            document.getElementById('userFilter').value = '';
+            document.getElementById('reviewerFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+
+            // Clear selected tags
+            selectedTags = [];
+            document.querySelectorAll('.tag').forEach(tag => {
+                tag.classList.remove('selected');
+            });
+
+            // Reset to show all jobs
+            filteredJobs = [...allJobs];
+            updateTable();
+            updateStats();
+            updateResultsCount();
+        }
+
+        function exportResults() {
+            // Create CSV content
+            let csvContent = "Job ID,Input Folder,Output Folder,Start Time,Stop Time,Status,Tags,Reviewer\n";
+            
+            filteredJobs.forEach(job => {
+                const row = job.element;
+                const cells = row.getElementsByTagName('td');
+                const csvRow = [
+                    cells[0].textContent, // Job ID
+                    cells[1].textContent, // Input Folder
+                    cells[2].textContent, // Output Folder
+                    cells[3].textContent, // Start Time
+                    cells[4].textContent, // Stop Time
+                    cells[5].textContent.trim(), // Status
+                    job.tags.join(';'), // Tags
+                    cells[7].textContent.trim() // Reviewer
+                ].map(field => `"${field}"`).join(',');
+                
+                csvContent += csvRow + "\n";
+            });
+
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `job_dashboard_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Auto-refresh for running jobs (simulation)
+        setInterval(() => {
+            const runningJobs = document.querySelectorAll('[data-status="running"]');
+            runningJobs.forEach(job => {
+                if (job.style.display !== 'none') {
+                    job.style.backgroundColor = '#f8f9fa';
+                    setTimeout(() => {
+                        job.style.backgroundColor = '';
+                    }, 500);
+                }
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
+

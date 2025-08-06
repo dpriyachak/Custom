@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .table-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .status-filter {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        thead {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+            color: #495057;
+            transition: background-color 0.2s ease;
+        }
+
+        tr:hover td {
+            background-color: #f8f9fa;
+        }
+
+        .job-id {
+            font-weight: 600;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+        }
+
+        .folder-path {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #6c757d;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .folder-path:hover {
+            overflow: visible;
+            white-space: normal;
+            word-break: break-all;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.running {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.pending {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .datetime {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .reviewer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reviewer-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .reviewer-name {
+            font-weight: 500;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box input {
+                width: 100%;
+            }
+
+            .status-filter {
+                justify-content: center;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 12px 8px;
+            }
+
+            .folder-path {
+                max-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Job Dashboard</h1>
+            <p>Monitor and manage document processing jobs</p>
+        </div>
+
+        <div class="table-container">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">24</div>
+                    <div class="stat-label">Total Jobs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">18</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Running</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="search-box">
+                    <input type="text" placeholder="Search jobs..." id="searchInput">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div class="status-filter">
+                    <button class="filter-btn active" data-status="all">All</button>
+                    <button class="filter-btn" data-status="completed">Completed</button>
+                    <button class="filter-btn" data-status="running">Running</button>
+                    <button class="filter-btn" data-status="pending">Pending</button>
+                    <button class="filter-btn" data-status="failed">Failed</button>
+                </div>
+            </div>
+
+            <table id="jobTable">
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th>Input Folder</th>
+                        <th>Output Folder</th>
+                        <th>Start Time</th>
+                        <th>Stop Time</th>
+                        <th>Status</th>
+                        <th>Human Reviewer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-status="completed">
+                        <td class="job-id">JOB-2024-001</td>
+                        <td class="folder-path">/data/input/batch_001/documents</td>
+                        <td class="folder-path">/data/output/batch_001/processed</td>
+                        <td class="datetime">2024-01-15 09:30:00</td>
+                        <td class="datetime">2024-01-15 11:45:00</td>
+                        <td><span class="status completed">Completed</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">JS</div>
+                            <span class="reviewer-name">John Smith</span>
+                        </td>
+                    </tr>
+                    <tr data-status="running">
+                        <td class="job-id">JOB-2024-002</td>
+                        <td class="folder-path">/data/input/batch_002/legal_docs</td>
+                        <td class="folder-path">/data/output/batch_002/analyzed</td>
+                        <td class="datetime">2024-01-15 14:20:00</td>
+                        <td class="datetime">-</td>
+                        <td><span class="status running">Running</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">MJ</div>
+                            <span class="reviewer-name">Maria Johnson</span>
+                        </td>
+                    </tr>
+                    <tr data-status="completed">
+                        <td class="job-id">JOB-2024-003</td>
+                        <td class="folder-path">/data/input/batch_003/financial_reports</td>
+                        <td class="folder-path">/data/output/batch_003/extracted</td>
+                        <td class="datetime">2024-01-14 16:00:00</td>
+                        <td class="datetime">2024-01-14 18:30:00</td>
+                        <td><span class="status completed">Completed</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">RW</div>
+                            <span class="reviewer-name">Robert Wilson</span>
+                        </td>
+                    </tr>
+                    <tr data-status="failed">
+                        <td class="job-id">JOB-2024-004</td>
+                        <td class="folder-path">/data/input/batch_004/contracts</td>
+                        <td class="folder-path">/data/output/batch_004/failed</td>
+                        <td class="datetime">2024-01-15 08:15:00</td>
+                        <td class="datetime">2024-01-15 08:45:00</td>
+                        <td><span class="status failed">Failed</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">LB</div>
+                            <span class="reviewer-name">Lisa Brown</span>
+                        </td>
+                    </tr>
+                    <tr data-status="pending">
+                        <td class="job-id">JOB-2024-005</td>
+                        <td class="folder-path">/data/input/batch_005/invoices</td>
+                        <td class="folder-path">/data/output/batch_005/pending</td>
+                        <td class="datetime">-</td>
+                        <td class="datetime">-</td>
+                        <td><span class="status pending">Pending</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">DM</div>
+                            <span class="reviewer-name">David Miller</span>
+                        </td>
+                    </tr>
+                    <tr data-status="running">
+                        <td class="job-id">JOB-2024-006</td>
+                        <td class="folder-path">/data/input/batch_006/medical_records</td>
+                        <td class="folder-path">/data/output/batch_006/processing</td>
+                        <td class="datetime">2024-01-15 13:45:00</td>
+                        <td class="datetime">-</td>
+                        <td><span class="status running">Running</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">SK</div>
+                            <span class="reviewer-name">Sarah Kim</span>
+                        </td>
+                    </tr>
+                    <tr data-status="completed">
+                        <td class="job-id">JOB-2024-007</td>
+                        <td class="folder-path">/data/input/batch_007/research_papers</td>
+                        <td class="folder-path">/data/output/batch_007/summarized</td>
+                        <td class="datetime">2024-01-13 10:00:00</td>
+                        <td class="datetime">2024-01-13 15:20:00</td>
+                        <td><span class="status completed">Completed</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">AT</div>
+                            <span class="reviewer-name">Alex Thompson</span>
+                        </td>
+                    </tr>
+                    <tr data-status="pending">
+                        <td class="job-id">JOB-2024-008</td>
+                        <td class="folder-path">/data/input/batch_008/customer_feedback</td>
+                        <td class="folder-path">/data/output/batch_008/analyzed</td>
+                        <td class="datetime">-</td>
+                        <td class="datetime">-</td>
+                        <td><span class="status pending">Pending</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">EG</div>
+                            <span class="reviewer-name">Emily Garcia</span>
+                        </td>
+                    </tr>
+                    <tr data-status="running">
+                        <td class="job-id">JOB-2024-009</td>
+                        <td class="folder-path">/data/input/batch_009/survey_responses</td>
+                        <td class="folder-path">/data/output/batch_009/insights</td>
+                        <td class="datetime">2024-01-15 15:30:00</td>
+                        <td class="datetime">-</td>
+                        <td><span class="status running">Running</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">CL</div>
+                            <span class="reviewer-name">Chris Lee</span>
+                        </td>
+                    </tr>
+                    <tr data-status="completed">
+                        <td class="job-id">JOB-2024-010</td>
+                        <td class="folder-path">/data/input/batch_010/product_manuals</td>
+                        <td class="folder-path">/data/output/batch_010/indexed</td>
+                        <td class="datetime">2024-01-12 09:15:00</td>
+                        <td class="datetime">2024-01-12 12:40:00</td>
+                        <td><span class="status completed">Completed</span></td>
+                        <td class="reviewer">
+                            <div class="reviewer-avatar">NP</div>
+                            <span class="reviewer-name">Nancy Parker</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const table = document.getElementById('jobTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+                
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                const filterStatus = this.getAttribute('data-status');
+                
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const rowStatus = row.getAttribute('data-status');
+                    
+                    if (filterStatus === 'all' || rowStatus === filterStatus) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        // Auto-refresh for running jobs (simulation)
+        setInterval(() => {
+            const runningJobs = document.querySelectorAll('[data-status="running"]');
+            runningJobs.forEach(job => {
+                // Add a subtle animation to indicate active processing
+                job.style.backgroundColor = '#f8f9fa';
+                setTimeout(() => {
+                    job.style.backgroundColor = '';
+                }, 500);
+            });
+        }, 3000);
+    </script>
+</body>
+</html>
+

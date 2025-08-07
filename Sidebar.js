@@ -8,8 +8,9 @@ const Sidebar = ({ filters, setFilters }) => {
       <h3>Search Filters</h3>
 
       <div className="filter-section">
-        <label>Job ID</label>
+        <label className="filter-label">Job ID</label>
         <input
+          className="filter-input"
           name="jobId"
           value={filters.jobId}
           onChange={handleChange}
@@ -18,8 +19,13 @@ const Sidebar = ({ filters, setFilters }) => {
       </div>
 
       <div className="filter-section">
-        <label>User</label>
-        <select name="reviewer" value={filters.reviewer} onChange={handleChange}>
+        <label className="filter-label">Reviewer</label>
+        <select
+          className="filter-select"
+          name="reviewer"
+          value={filters.reviewer}
+          onChange={handleChange}
+        >
           <option value="">All</option>
           <option value="admin">Admin</option>
           <option value="analyst">Analyst</option>
@@ -27,8 +33,13 @@ const Sidebar = ({ filters, setFilters }) => {
       </div>
 
       <div className="filter-section">
-        <label>Status</label>
-        <select name="status" value={filters.status} onChange={handleChange}>
+        <label className="filter-label">Status</label>
+        <select
+          className="filter-select"
+          name="status"
+          value={filters.status}
+          onChange={handleChange}
+        >
           <option value="">All</option>
           <option value="completed">Completed</option>
           <option value="running">Running</option>

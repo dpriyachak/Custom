@@ -1,14 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <title>Job Dashboard</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div> <!-- This is where your React app mounts -->
-  </body>
-</html>
+import React from "react";
+
+function App() {
+  return (
+    <div style={{ height: "100vh", width: "100vw", border: "none" }}>
+      <iframe
+        src={`${process.env.PUBLIC_URL}/job_dashboard_enhanced.html`}
+        title="Job Dashboard"
+        width="100%"
+        height="100%"
+        style={{ border: "none" }}
+      />
+    </div>
+  );
+}
+
+export default App;

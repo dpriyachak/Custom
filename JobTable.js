@@ -4,8 +4,28 @@ const JobTable = ({ jobs }) => {
   }
 
   return (
-    <div className="table-container">
-      <div className="results-count">{jobs.length} jobs found</div>
+    <div className="table-panel">
+      <div className="stats-panel">
+        <div className="stat-box">
+          <h2>{jobs.length}</h2>
+          <p>Total Jobs</p>
+        </div>
+        <div className="stat-box">
+          <h2>{jobs.filter((j) => j.status === "completed").length}</h2>
+          <p>Completed</p>
+        </div>
+        <div className="stat-box">
+          <h2>{jobs.filter((j) => j.status === "running").length}</h2>
+          <p>Running</p>
+        </div>
+        <div className="stat-box">
+          <h2>{jobs.filter((j) => j.status === "failed").length}</h2>
+          <p>Failed</p>
+        </div>
+      </div>
+
+      <button className="export-button">Export CSV</button>
+
       <table>
         <thead>
           <tr>
@@ -28,8 +48,21 @@ const JobTable = ({ jobs }) => {
               <td>{job.startTime}</td>
               <td>{job.stopTime}</td>
               <td>{job.status}</td>
-              <td>{job.reviewer}</td>
-              <td>{job.tags.join(", ")}</td>
+              <td>
+                <div className="reviewer-cell">
+                  <div className="reviewer-avatar">
+                    {job.reviewer ? job.reviewer.charAt(0).toUpperCase() : "?"}
+                  </div>
+                  <span>{job.reviewer}</span>
+                </div>
+              </td>
+              <td>
+                {job.tags.map((tag, idx) => (
+                  <span className="tag-badge" key={idx}>
+                    {tag}
+                  </span>
+                ))}
+              </td>
             </tr>
           ))}
         </tbody>

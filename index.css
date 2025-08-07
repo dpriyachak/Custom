@@ -1,4 +1,3 @@
-/* General Reset and Base Styles */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -66,13 +65,75 @@ body {
   border-color: #2563eb;
 }
 
-/* Job Table Styles */
-.table-container {
+.filter-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.filter-button:hover {
+  background-color: #1e40af;
+}
+
+/* Table & Job Panel */
+.table-panel {
   flex-grow: 1;
   padding: 20px;
   overflow-x: auto;
 }
 
+/* Stats Section */
+.stats-panel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-box {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  padding: 15px;
+  border-radius: 5px;
+  text-align: center;
+  flex: 1 0 150px;
+  margin: 5px;
+}
+
+.stat-box h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.stat-box p {
+  margin: 5px 0 0;
+  font-weight: bold;
+}
+
+/* Export Button */
+.export-button {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 15px;
+  float: right;
+}
+
+.export-button:hover {
+  background-color: #059669;
+}
+
+/* Job Table */
 .results-count {
   margin-bottom: 10px;
   font-weight: bold;
@@ -106,25 +167,8 @@ td {
   color: #374151;
 }
 
-/* No Results Message */
 .no-results {
   padding: 20px;
   font-style: italic;
   color: #6b7280;
 }
-
-.filter-button {
-  width: 100%;
-  padding: 10px;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.filter-button:hover {
-  background-color: #1e40af;
-}
-

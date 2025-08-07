@@ -1,0 +1,114 @@
+/* General Reset and Base Styles */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+}
+
+.header {
+  background-color: #1f2937;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.header p {
+  margin: 5px 0 0;
+  font-weight: 300;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 100px);
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: 250px;
+  background-color: #f3f4f6;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+}
+
+.sidebar h3 {
+  margin-top: 0;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #374151;
+}
+
+.filter-input,
+.filter-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* Job Table Styles */
+.table-container {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.results-count {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #374151;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+thead {
+  background-color: #e5e7eb;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #d1d5db;
+}
+
+th {
+  font-weight: bold;
+  color: #111827;
+}
+
+td {
+  color: #374151;
+}
+
+/* No Results Message */
+.no-results {
+  padding: 20px;
+  font-style: italic;
+  color: #6b7280;
+}

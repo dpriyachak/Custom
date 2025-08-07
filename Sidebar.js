@@ -1,6 +1,30 @@
-const Sidebar = ({ filters, setFilters }) => {
+import { useState } from "react";
+
+const Sidebar = ({ filters, setFilters, onApply, onClear }) => {
+  const [localFilters, setLocalFilters] = useState(filters);
+
   const handleChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setLocalFilters({ ...localFilters, [name]: value });
+  };
+
+  const handleApply = () => {
+    setFilters(localFilters);
+    onApply();
+  };
+
+  const handleClear = () => {
+    const cleared = {
+      jobId: "",
+      reviewer: "",
+      status: "",
+      tags: "",
+      startTime: "",
+      stopTime: ""
+    };
+    setLocalFilters(cleared);
+    setFilters(cleared);
+    onClear();
   };
 
   return (
@@ -12,7 +36,7 @@ const Sidebar = ({ filters, setFilters }) => {
         <input
           className="filter-input"
           name="jobId"
-          value={filters.jobId}
+          value={localFilters.jobId}
           onChange={handleChange}
           placeholder="Enter Job ID"
         />
@@ -20,16 +44,13 @@ const Sidebar = ({ filters, setFilters }) => {
 
       <div className="filter-section">
         <label className="filter-label">Reviewer</label>
-        <select
-          className="filter-select"
+        <input
+          className="filter-input"
           name="reviewer"
-          value={filters.reviewer}
+          value={localFilters.reviewer}
           onChange={handleChange}
-        >
-          <option value="">All</option>
-          <option value="admin">Admin</option>
-          <option value="analyst">Analyst</option>
-        </select>
+          placeholder="Enter Reviewer"
+        />
       </div>
 
       <div className="filter-section">
@@ -37,7 +58,7 @@ const Sidebar = ({ filters, setFilters }) => {
         <select
           className="filter-select"
           name="status"
-          value={filters.status}
+          value={localFilters.status}
           onChange={handleChange}
         >
           <option value="">All</option>
@@ -45,6 +66,46 @@ const Sidebar = ({ filters, setFilters }) => {
           <option value="running">Running</option>
         </select>
       </div>
+
+      <div className="filter-section">
+        <label className="filter-label">Tags</label>
+        <input
+          className="filter-input"
+          name="tags"
+          value={localFilters.tags}
+          onChange={handleChange}
+          placeholder="Enter Tag (e.g. invoice)"
+        />
+      </div>
+
+      <div className="filter-section">
+        <label className="filter-label">Start Time</label>
+        <input
+          className="filter-input"
+          name="startTime"
+          value={localFilters.startTime}
+          onChange={handleChange}
+          placeholder="YYYY-MM-DD HH:mm"
+        />
+      </div>
+
+      <div className="filter-section">
+        <label className="filter-label">Stop Time</label>
+        <input
+          className="filter-input"
+          name="stopTime"
+          value={localFilters.stopTime}
+          onChange={handleChange}
+          placeholder="YYYY-MM-DD HH:mm"
+        />
+      </div>
+
+      <button className="filter-button" onClick={handleApply}>
+        Apply Filters
+      </button>
+      <button className="filter-button" onClick={handleClear} style={{ marginTop: "10px" }}>
+        Clear Filters
+      </button>
     </div>
   );
 };

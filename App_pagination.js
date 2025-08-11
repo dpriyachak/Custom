@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import JobTable from "./components/JobTable";
+import { fetchJobs } from "./utils/api"; // API call function
 
 function App() {
   const [filters, setFilters] = useState({
@@ -12,10 +13,27 @@ function App() {
     stopTime: ""
   });
 
-  const [jobs, setJobs] = useState([]);           // all jobs from API
-  const [filteredJobs, setFilteredJobs] = useState([]); // after filtering
+  const [jobs, setJobs] = useState([]); // All jobs from API
+  const [filteredJobs, setFilteredJobs] = useState([]); // Displayed jobs
+  const [nextToken, setNextToken] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Pagination state (client-side display)
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 10;
+
+  const loadJobs = async (token = null) => {
+    setLoading(true);
+    const { jobs: newJobs, nextToken: newToken } = await fetchJobs(1000, token);
+    setJobs(prev => [...prev, ...newJobs]);
+    setFilteredJobs(prev => [...prev, ...newJobs]); // Default view shows all
+    setNextToken(newToken);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadJobs(); // Load first page on mount
+  }, []);
 
   const applyFilters = () => {
     const result = jobs.filter((job) => {
@@ -29,11 +47,10 @@ function App() {
       );
     });
     setFilteredJobs(result);
-    setCurrentPage(1); // reset to first page when filters change
+    setCurrentPage(1); // Reset to first page
   };
 
   const clearFilters = () => {
-    setFilteredJobs(jobs);
     setFilters({
       jobId: "",
       reviewer: "",
@@ -42,10 +59,11 @@ function App() {
       startTime: "",
       stopTime: ""
     });
+    setFilteredJobs(jobs);
     setCurrentPage(1);
   };
 
-  // Get current page jobs
+  // Slice jobs for the current page
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
   const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
@@ -64,14 +82,22 @@ function App() {
           onApply={applyFilters}
           onClear={clearFilters}
         />
-        <JobTable
-          jobs={currentJobs}
-          totalJobs={filteredJobs.length}
-          jobsPerPage={jobsPerPage}
-          totalFilteredJobs={filteredJobs.length}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-        />
+        <div>
+          <JobTable
+            jobs={currentJobs}
+            totalJobs={jobs.length}
+            jobsPerPage={jobsPerPage}
+            totalFilteredJobs={filteredJobs.length}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+          />
+          {/* Load more button for API-based pagination */}
+          {nextToken && (
+            <button onClick={() => loadJobs(nextToken)} disabled={loading}>
+              {loading ? "Loading..." : "Load More"}
+            </button>
+          )}
+        </div>
       </div>
     </>
   );

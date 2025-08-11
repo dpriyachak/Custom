@@ -1,18 +1,18 @@
-const normalizeDate = (dateStr) => {
+const getDateOnly = (dateStr) => {
   if (!dateStr) return null;
-  // Replace double spaces with 'T', remove microseconds if present
-  const cleaned = dateStr
-    .replace(/\s{2,}/g, "T")
-    .replace(/\.\d+$/, "");
-  return new Date(cleaned);
+  return dateStr.split(" ")[0]; // Take only the date part before the first space
 };
 
 const applyFilters = () => {
   const result = jobs.filter((job) => {
-    const jobStart = normalizeDate(job.startTime);
-    const jobStop = normalizeDate(job.stopTime);
-    const filterStart = normalizeDate(filters.startTime);
-    const filterStop = normalizeDate(filters.stopTime);
+    const jobDate = getDateOnly(job.startTime);
+    const jobStopDate = getDateOnly(job.stopTime);
+    const filterStartDate = filters.startTime
+      ? filters.startTime.split("T")[0]
+      : null;
+    const filterStopDate = filters.stopTime
+      ? filters.stopTime.split("T")[0]
+      : null;
 
     return (
       (filters.jobId === "" || job.jobId.includes(filters.jobId)) &&
@@ -23,9 +23,10 @@ const applyFilters = () => {
         (Array.isArray(job.tags)
           ? job.tags.join(" ").includes(filters.tags)
           : false)) &&
-      (!filterStart || (jobStart && jobStart >= filterStart)) &&
-      (!filterStop || (jobStop && jobStop <= filterStop))
+      (!filterStartDate || jobDate >= filterStartDate) &&
+      (!filterStopDate || jobStopDate <= filterStopDate)
     );
   });
+
   setFilteredJobs(result);
 };

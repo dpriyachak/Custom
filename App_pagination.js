@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import JobTable from "./components/JobTable";
-import { fetchJobs } from "./utils/api"; // API call function
+import { fetchJobs } from "./utils/api"; // API call
 
 function App() {
   const [filters, setFilters] = useState({
@@ -13,41 +13,37 @@ function App() {
     stopTime: ""
   });
 
-  const [jobs, setJobs] = useState([]); // All jobs from API
-  const [filteredJobs, setFilteredJobs] = useState([]); // Displayed jobs
-  const [nextToken, setNextToken] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  // Pagination state (client-side display)
+  const [jobs, setJobs] = useState([]);
+  const [totalJobs, setTotalJobs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 10;
+  const [loading, setLoading] = useState(false);
 
-  const loadJobs = async (token = null) => {
+  // Store API-provided nextTokens for each page
+  const [pageTokens, setPageTokens] = useState({ 1: null });
+
+  const loadJobs = async (page = 1) => {
     setLoading(true);
-    const { jobs: newJobs, nextToken: newToken } = await fetchJobs(1000, token);
-    setJobs(prev => [...prev, ...newJobs]);
-    setFilteredJobs(prev => [...prev, ...newJobs]); // Default view shows all
-    setNextToken(newToken);
+    const token = pageTokens[page] || null;
+    const { jobs: newJobs, nextToken, totalCount } = await fetchJobs(jobsPerPage, token);
+    setJobs(newJobs);
+    setTotalJobs(totalCount);
     setLoading(false);
+
+    // Save the nextToken for the following page
+    if (nextToken) {
+      setPageTokens(prev => ({ ...prev, [page + 1]: nextToken }));
+    }
   };
 
   useEffect(() => {
-    loadJobs(); // Load first page on mount
+    loadJobs(1); // Load first page
   }, []);
 
   const applyFilters = () => {
-    const result = jobs.filter((job) => {
-      return (
-        (!filters.jobId || job.jobId.includes(filters.jobId)) &&
-        (!filters.reviewer || job.reviewer.toLowerCase().includes(filters.reviewer.toLowerCase())) &&
-        (!filters.status || job.status === filters.status) &&
-        (!filters.tags || job.tags.join(" ").includes(filters.tags)) &&
-        (!filters.startTime || job.startTime >= filters.startTime) &&
-        (!filters.stopTime || job.stopTime <= filters.stopTime)
-      );
-    });
-    setFilteredJobs(result);
-    setCurrentPage(1); // Reset to first page
+    // In server-side filtering, filters should be sent to API
+    setCurrentPage(1);
+    loadJobs(1);
   };
 
   const clearFilters = () => {
@@ -59,14 +55,9 @@ function App() {
       startTime: "",
       stopTime: ""
     });
-    setFilteredJobs(jobs);
     setCurrentPage(1);
+    loadJobs(1);
   };
-
-  // Slice jobs for the current page
-  const indexOfLastJob = currentPage * jobsPerPage;
-  const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
 
   return (
     <>
@@ -82,22 +73,17 @@ function App() {
           onApply={applyFilters}
           onClear={clearFilters}
         />
-        <div>
-          <JobTable
-            jobs={currentJobs}
-            totalJobs={jobs.length}
-            jobsPerPage={jobsPerPage}
-            totalFilteredJobs={filteredJobs.length}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-          />
-          {/* Load more button for API-based pagination */}
-          {nextToken && (
-            <button onClick={() => loadJobs(nextToken)} disabled={loading}>
-              {loading ? "Loading..." : "Load More"}
-            </button>
-          )}
-        </div>
+        <JobTable
+          jobs={jobs}
+          totalJobs={totalJobs}
+          jobsPerPage={jobsPerPage}
+          currentPage={currentPage}
+          setCurrentPage={(page) => {
+            setCurrentPage(page);
+            loadJobs(page);
+          }}
+          loading={loading}
+        />
       </div>
     </>
   );

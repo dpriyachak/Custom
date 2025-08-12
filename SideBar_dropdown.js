@@ -48,6 +48,29 @@ const Sidebar = ({ filters, setFilters, onApply, onClear }) => {
         ))}
       </select>
 
+      {/* Tags Filter */}
+    <div className="filter-section">
+      <label className="filter-label">Tags</label>
+      <div className="tags-container">
+        {dropdownData.tags.map(tag => (
+          <span
+            key={tag}
+            className={`tag ${filters.tags === tag ? "selected" : ""}`}
+            onClick={() =>
+              setFilters(prev => ({
+                ...prev,
+                tags: prev.tags === tag ? "" : tag // toggle tag selection
+              }))
+            }
+            data-tag={tag}
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  
+
       <!-- Tags Filter -->
                 <div class="filter-section">
                     <label class="filter-label">Tags</label>

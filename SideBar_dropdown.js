@@ -48,18 +48,20 @@ const Sidebar = ({ filters, setFilters, onApply, onClear }) => {
         ))}
       </select>
 
-      {/* Tags dropdown */}
-      <select
-        value={filters.tags}
-        onChange={(e) => setFilters({ ...filters, tags: e.target.value })}
-      >
-        <option value="">All Tags</option>
-        {dropdownData.tags.map((tag) => (
-          <option key={tag} value={tag}>
-            {tag}
-          </option>
-        ))}
-      </select>
+      <!-- Tags Filter -->
+                <div class="filter-section">
+                    <label class="filter-label">Tags</label>
+                    <div class="tags-container">
+                        <span class="tag" data-tag="urgent">Urgent</span>
+                        <span class="tag" data-tag="legal">Legal</span>
+                        <span class="tag" data-tag="financial">Financial</span>
+                        <span class="tag" data-tag="medical">Medical</span>
+                        <span class="tag" data-tag="research">Research</span>
+                        <span class="tag" data-tag="contracts">Contracts</span>
+                        <span class="tag" data-tag="invoices">Invoices</span>
+                        <span class="tag" data-tag="reports">Reports</span>
+                    </div>
+                </div>
 
       {/* Buttons */}
       <button onClick={onApply}>Apply Filters</button>

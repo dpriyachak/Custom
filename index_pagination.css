@@ -1,27 +1,28 @@
 .pagination-container {
   display: flex;
-  justify-content: center;
+  justify-content: center;  /* ✅ center horizontally */
   margin-top: 20px;
 }
 
 .pagination {
   display: flex;
-  gap: 5px;
-}
-
-.page-item {
+  gap: 8px;
   list-style: none;
+  padding: 0;
 }
 
-.page-link {
-  border: 1px solid #ddd;
-  padding: 6px 12px;
-  background: white;
+.page-item a {
+  color: #6c63ff;           /* link color */
+  text-decoration: none;    /* remove underline */
+  padding: 4px 8px;
   cursor: pointer;
 }
 
-.page-item.active .page-link {
-  background: #6c63ff;
-  color: white;
-  border-color: #6c63ff;
+.page-item a:hover {
+  text-decoration: underline;  /* underline on hover like a link */
+}
+
+.page-item.active a {
+  font-weight: bold;
+  text-decoration: underline;
 }

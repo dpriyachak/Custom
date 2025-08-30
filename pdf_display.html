@@ -2,17 +2,19 @@
   <div id="file-viewer"></div>
 
   <script>
-    // This would typically come from your input JSON 
-    // (you pass the file URL into the template)
-    var fileUrl = "${task.input.fileUrl}"; 
-
+    var fileUrl = "${task.input.fileUrl}"; // Replace with your input variable
     var viewer = document.getElementById("file-viewer");
 
-    if (fileUrl.toLowerCase().endsWith(".pdf")) {
+    // Get file extension
+    var ext = fileUrl.split('.').pop().toLowerCase();
+
+    if (ext === "pdf") {
+      // Show PDF using <embed>
       viewer.innerHTML = `
-        <iframe src="${fileUrl}" width="100%" height="600px"></iframe>
+        <embed src="${fileUrl}" type="application/pdf" width="100%" height="600px" />
       `;
-    } else if (fileUrl.toLowerCase().match(/\.(png|jpg|jpeg|gif)$/)) {
+    } else if (["png", "jpg", "jpeg", "gif"].includes(ext)) {
+      // Show image using <img>
       viewer.innerHTML = `
         <img src="${fileUrl}" alt="Preview" style="max-width:100%; height:auto;" />
       `;

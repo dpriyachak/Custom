@@ -1,26 +1,39 @@
-# Python 3
-import base64
+import boto3
+import fitz  # PyMuPDF
+import io
 
-pdf_path = "sample.pdf"
+s3 = boto3.client("s3")
 
-with open(pdf_path, "rb") as f:
-    encoded_pdf = base64.b64encode(f.read()).decode("utf-8")
+def pdf_to_images(bucket_name, pdf_key, output_prefix, dpi=200):
+    """
+    Convert a PDF file in S3 to images and upload them back to S3.
+    
+    :param bucket_name: str, S3 bucket name
+    :param pdf_key: str, key of the input PDF in S3
+    :param output_prefix: str, prefix/folder in S3 where images will be uploaded
+    :param dpi: int, resolution for image conversion
+    """
+    
+    # 1. Download PDF from S3 into memory
+    pdf_obj = s3.get_object(Bucket=bucket_name, Key=pdf_key)
+    pdf_bytes = pdf_obj["Body"].read()
+    
+    # 2. Open PDF with fitz (PyMuPDF)
+    pdf_doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    
+    # 3. Loop through pages using load_page()
+    for page_number in range(pdf_doc.page_count):
+        page = pdf_doc.load_page(page_number)   # ✅ recommended way
+        pix = page.get_pixmap(dpi=dpi)          # render page to image
+        
+        # Save image into a BytesIO buffer
+        img_buffer = io.BytesIO(pix.tobytes("png"))
+        
+        # 4. Upload each page image to S3
+        img_key = f"{output_prefix}/page_{page_number + 1}.png"
+        s3.upload_fileobj(img_buffer, bucket_name, img_key, ExtraArgs={"ContentType": "image/png"})
+        
+        print(f"Uploaded: s3://{bucket_name}/{img_key}")
 
-print(encoded_pdf)  # this string can be passed as task.input.base64
-
-
-{
-  "pdfBase64": "JVBERi0xLjQKJ...."
-}
-
-
-<crowd-form>
-  <div class="file-viewer">
-    <embed 
-      src="data:application/pdf;base64,{{task.input.pdfBase64}}" 
-      type="application/pdf" 
-      width="100%" 
-      height="600px" />
-  </div>
-</crowd-form>
+    pdf_doc.close()
 

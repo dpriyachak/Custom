@@ -1,0 +1,23 @@
+<crowd-form>
+  <div id="file-viewer"></div>
+
+  <script>
+    // This would typically come from your input JSON 
+    // (you pass the file URL into the template)
+    var fileUrl = "${task.input.fileUrl}"; 
+
+    var viewer = document.getElementById("file-viewer");
+
+    if (fileUrl.toLowerCase().endsWith(".pdf")) {
+      viewer.innerHTML = `
+        <iframe src="${fileUrl}" width="100%" height="600px"></iframe>
+      `;
+    } else if (fileUrl.toLowerCase().match(/\.(png|jpg|jpeg|gif)$/)) {
+      viewer.innerHTML = `
+        <img src="${fileUrl}" alt="Preview" style="max-width:100%; height:auto;" />
+      `;
+    } else {
+      viewer.innerHTML = `<p>Unsupported file type: ${fileUrl}</p>`;
+    }
+  </script>
+</crowd-form>

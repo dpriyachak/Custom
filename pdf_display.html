@@ -1,25 +1,10 @@
 <crowd-form>
-  <div id="file-viewer"></div>
+  {{#task.input.fileType "pdf"}}
+    <embed src="{{task.input.object}}" type="application/pdf" width="100%" height="600px" />
+  {{/task.input.fileType}}
 
-  <script>
-    var fileUrl = "${task.input.fileUrl}"; // Replace with your input variable
-    var viewer = document.getElementById("file-viewer");
-
-    // Get file extension
-    var ext = fileUrl.split('.').pop().toLowerCase();
-
-    if (ext === "pdf") {
-      // Show PDF using <embed>
-      viewer.innerHTML = `
-        <embed src="${fileUrl}" type="application/pdf" width="100%" height="600px" />
-      `;
-    } else if (["png", "jpg", "jpeg", "gif"].includes(ext)) {
-      // Show image using <img>
-      viewer.innerHTML = `
-        <img src="${fileUrl}" alt="Preview" style="max-width:100%; height:auto;" />
-      `;
-    } else {
-      viewer.innerHTML = `<p>Unsupported file type: ${fileUrl}</p>`;
-    }
-  </script>
+  {{#task.input.fileType "image"}}
+    <img src="{{task.input.object}}" style="max-width:100%; height:auto;" />
+  {{/task.input.fileType}}
 </crowd-form>
+

@@ -32,3 +32,14 @@ def lambda_handler(event, context):
     )
     
     return {"message": "Failure recorded", "ExecutionArn": execution_arn}
+
+{
+  "source": ["aws.states"],
+  "detail-type": ["Step Functions Execution Status Change"],
+  "detail": {
+    "status": ["FAILED"],
+    "stateMachineArn": [
+      "arn:aws:states:us-east-1:123456789012:stateMachine:MyStateMachine"
+    ]
+  }
+}

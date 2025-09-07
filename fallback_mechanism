@@ -1,0 +1,51 @@
+{
+  "Comment": "Document extraction workflow with fallback",
+  "StartAt": "ClassifyDocument",
+  "States": {
+    "ClassifyDocument": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.documentClass",
+          "StringEquals": "TextractClass",
+          "Next": "TextractExtraction"
+        },
+        {
+          "Variable": "$.documentClass",
+          "StringEquals": "VisionClass",
+          "Next": "VisionExtraction"
+        }
+      ],
+      "Default": "TextractExtraction"
+    },
+    "VisionExtraction": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:region:account-id:function:vision_extraction",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "MarkFallback"
+        }
+      ],
+      "Next": "ProcessResults"
+    },
+    "MarkFallback": {
+      "Type": "Pass",
+      "Result": {
+        "usedFallback": true
+      },
+      "ResultPath": "$.fallbackInfo",
+      "Next": "TextractExtraction"
+    },
+    "TextractExtraction": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:region:account-id:function:textract_extraction",
+      "Next": "ProcessResults"
+    },
+    "ProcessResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:region:account-id:function:process_results",
+      "End": true
+    }
+  }
+}

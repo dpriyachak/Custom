@@ -1,3 +1,9 @@
+ext = key.lower().split(".")[-1]
+if ext in ["jpg", "jpeg"]:
+    filetype = "jpeg"
+elif ext == "png":
+    filetype = "png"
+
 import boto3
 import fitz  # PyMuPDF
 import base64

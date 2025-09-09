@@ -1,9 +1,3 @@
-ext = key.lower().split(".")[-1]
-if ext in ["jpg", "jpeg"]:
-    filetype = "jpeg"
-elif ext == "png":
-    filetype = "png"
-
 import boto3
 import fitz  # PyMuPDF
 import base64
@@ -11,123 +5,125 @@ import os
 
 s3 = boto3.client("s3")
 
-# ----------------------
-# Utilities
-# ----------------------
-def load_pdf_from_s3(bucket, key):
-    obj = s3.get_object(Bucket=bucket, Key=key)
-    pdf_bytes = obj["Body"].read()
-    return fitz.open(stream=pdf_bytes, filetype="pdf")
+# ---------- Helpers ----------
+def detect_filetype_from_s3(key: str, content_type: str) -> str:
+    """Return 'pdf' | 'jpeg' | 'png'."""
+    ct = (content_type or "").lower()
+    if "pdf" in ct:
+        return "pdf"
+    if "jpeg" in ct or "jpg" in ct:
+        return "jpeg"
+    if "png" in ct:
+        return "png"
+    ext = key.lower().split(".")[-1]
+    if ext in ("pdf", "jpg", "jpeg", "png"):
+        return "jpeg" if ext in ("jpg", "jpeg") else ext
+    raise ValueError(f"Unsupported file type: {content_type}, key={key}")
 
-def load_image_from_s3(bucket, key):
+def load_file_from_s3(bucket: str, key: str):
     obj = s3.get_object(Bucket=bucket, Key=key)
-    img_bytes = obj["Body"].read()
-    return fitz.Pixmap(img_bytes)
+    data = obj["Body"].read()
+    filetype = detect_filetype_from_s3(key, obj.get("ContentType", ""))
+    return data, filetype
 
-def save_bytes_to_s3(bucket, key, data_bytes, content_type="image/jpeg"):
+def save_bytes_to_s3(bucket: str, key: str, data_bytes: bytes, content_type="image/jpeg"):
     s3.put_object(Bucket=bucket, Key=key, Body=data_bytes, ContentType=content_type)
 
-def pdf_page_to_vertex_safe_image(page, max_mb=7, min_zoom=0.2, max_zoom=1.0, zoom_step=0.1):
+# ---------- Zoom-based resize ----------
+def render_pixmap_with_zoom(pix, max_mb=7.0, min_zoom=0.2, max_zoom=1.0, zoom_step=0.1):
     zoom = max_zoom
+    last_bytes, last_dims, size_mb = None, None, None
+
     while zoom >= min_zoom:
         mat = fitz.Matrix(zoom, zoom)
-        pix = page.get_pixmap(matrix=mat, alpha=False)
-        img_bytes = pix.tobytes("jpeg")
-        size_mb = len(img_bytes) / (1024 * 1024)
+        scaled_pix = fitz.Pixmap(pix, 0, mat) if pix.alpha == 0 else fitz.Pixmap(pix, 0, mat, alpha=False)
+        jpg = scaled_pix.tobytes("jpeg")
+        size_mb = len(jpg) / (1024 * 1024)
+        last_bytes = jpg
+        last_dims = (scaled_pix.width, scaled_pix.height)
+
         if size_mb <= max_mb:
             break
         zoom -= zoom_step
     else:
-        print(f"⚠️ Warning: Image exceeds {max_mb} MB even at min_zoom={min_zoom}")
+        print(f"⚠️ Warning: Still > {max_mb} MB even at min_zoom={min_zoom}")
 
-    return (
-        base64.b64encode(img_bytes).decode("utf-8"),
-        size_mb,
-        (pix.width, pix.height),
-        img_bytes,
+    b64 = base64.b64encode(last_bytes).decode("utf-8")
+    return b64, size_mb, last_dims, last_bytes
+
+# ---------- PDF handler ----------
+def pdf_to_vertex_safe(pdf_bytes, max_mb=7.0, first_page_only=False,
+                       min_zoom=0.2, max_zoom=1.0, zoom_step=0.1):
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    pages = [0] if first_page_only else range(len(doc))
+    results = []
+    for pno in pages:
+        page = doc.load_page(pno)
+        pix = page.get_pixmap(alpha=False)
+        b64, size_mb, dims, jpg = render_pixmap_with_zoom(
+            pix, max_mb=max_mb, min_zoom=min_zoom, max_zoom=max_zoom, zoom_step=zoom_step
+        )
+        results.append({"page": pno + 1, "base64": b64, "size_mb": size_mb, "dimensions": dims, "jpeg": jpg})
+    return results
+
+# ---------- Image handler ----------
+def image_to_vertex_safe(image_bytes, filetype, max_mb=7.0,
+                         min_zoom=0.2, max_zoom=1.0, zoom_step=0.1):
+    pix = fitz.Pixmap(image_bytes)  # direct load into pixmap
+    b64, size_mb, dims, jpg = render_pixmap_with_zoom(
+        pix, max_mb=max_mb, min_zoom=min_zoom, max_zoom=max_zoom, zoom_step=zoom_step
     )
+    return {"base64": b64, "size_mb": size_mb, "dimensions": dims, "jpeg": jpg}
 
-def image_to_vertex_safe(base_pix, max_mb=7, min_zoom=0.2, max_zoom=1.0, zoom_step=0.1):
-    zoom = max_zoom
-    img_bytes = None
-    final_pix = None
-
-    while zoom >= min_zoom:
-        new_width = int(base_pix.width * zoom)
-        new_height = int(base_pix.height * zoom)
-        scaled_pix = fitz.Pixmap(base_pix, 0).resize(new_width, new_height)
-        img_bytes = scaled_pix.tobytes("jpeg")
-        size_mb = len(img_bytes) / (1024 * 1024)
-        if size_mb <= max_mb:
-            final_pix = scaled_pix
-            break
-        zoom -= zoom_step
-    else:
-        print(f"⚠️ Warning: Image exceeds {max_mb} MB even at min_zoom={min_zoom}")
-        final_pix = scaled_pix
-
-    return (
-        base64.b64encode(img_bytes).decode("utf-8"),
-        size_mb,
-        (final_pix.width, final_pix.height),
-        img_bytes,
-    )
-
-# ----------------------
-# Lambda Handler
-# ----------------------
+# ---------- Lambda handler ----------
 def lambda_handler(event, context):
     """
-    Expected event:
-    {
+    event = {
       "bucket": "my-input-bucket",
-      "key": "file.pdf" | "file.jpg",
-      "output_bucket": "my-output-bucket",
-      "first_page_only": true
+      "key": "file.pdf|file.jpg|file.png",
+      "output_bucket": "my-output-bucket",   # optional
+      "first_page_only": true,               # for PDFs
+      "max_mb": 7.0,
+      "min_zoom": 0.2,
+      "max_zoom": 1.0,
+      "zoom_step": 0.1
     }
     """
     bucket = event["bucket"]
     key = event["key"]
     output_bucket = event.get("output_bucket")
-    max_mb = float(event.get("max_mb", 7))
-    first_page_only = event.get("first_page_only", False)
+    first_page_only = bool(event.get("first_page_only", False))
+    max_mb = float(event.get("max_mb", 7.0))
+    min_zoom = float(event.get("min_zoom", 0.2))
+    max_zoom = float(event.get("max_zoom", 1.0))
+    zoom_step = float(event.get("zoom_step", 0.1))
+
+    file_bytes, filetype = load_file_from_s3(bucket, key)
 
     results = []
-
-    if key.lower().endswith(".pdf"):
-        # Handle PDF
-        doc = load_pdf_from_s3(bucket, key)
-        pages_to_process = [0] if first_page_only else range(len(doc))
-        for page_num in pages_to_process:
-            page = doc.load_page(page_num)
-            img_b64, size_mb, dims, img_bytes = pdf_page_to_vertex_safe_image(
-                page, max_mb=max_mb
-            )
+    if filetype == "pdf":
+        rendered = pdf_to_vertex_safe(
+            file_bytes, max_mb=max_mb,
+            first_page_only=first_page_only,
+            min_zoom=min_zoom, max_zoom=max_zoom, zoom_step=zoom_step
+        )
+        for r in rendered:
             if output_bucket:
-                out_key = f"{os.path.splitext(key)[0]}_page_{page_num+1}.jpg"
-                save_bytes_to_s3(output_bucket, out_key, img_bytes)
-            results.append(
-                {
-                    "page": page_num + 1,
-                    "size_mb": size_mb,
-                    "dimensions": dims,
-                    "base64": img_b64,
-                }
-            )
+                out_key = f"{os.path.splitext(key)[0]}_page_{r['page']}.jpg"
+                save_bytes_to_s3(output_bucket, out_key, r["jpeg"])
+                r["s3_output"] = f"s3://{output_bucket}/{out_key}"
+            r.pop("jpeg", None)
+            results.append(r)
     else:
-        # Handle image
-        base_pix = load_image_from_s3(bucket, key)
-        img_b64, size_mb, dims, img_bytes = image_to_vertex_safe(
-            base_pix, max_mb=max_mb
+        r = image_to_vertex_safe(
+            file_bytes, filetype=filetype,
+            max_mb=max_mb, min_zoom=min_zoom, max_zoom=max_zoom, zoom_step=zoom_step
         )
         if output_bucket:
             out_key = f"{os.path.splitext(key)[0]}_resized.jpg"
-            save_bytes_to_s3(output_bucket, out_key, img_bytes)
-        results.append(
-            {"size_mb": size_mb, "dimensions": dims, "base64": img_b64}
-        )
+            save_bytes_to_s3(output_bucket, out_key, r["jpeg"])
+            r["s3_output"] = f"s3://{output_bucket}/{out_key}"
+        r.pop("jpeg", None)
+        results.append(r)
 
-    return {
-        "status": "success",
-        "results": results,
-    }
+    return {"status": "success", "filetype": filetype, "results": results}
